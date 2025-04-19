@@ -5,6 +5,7 @@ public class PomodoroTimer {
 
     private final int timerInterval;
     private final int breakInterval;
+    private int repetitions;
     private volatile boolean isPaused = false;
 
     private final Object threadLock = new Object();
@@ -14,15 +15,25 @@ public class PomodoroTimer {
         this.breakInterval = breakInterval;
     }
 
+    //Overloaded for repetition
+    public PomodoroTimer(int timerInterval, int breakInterval, int repetitions) {
+        this.timerInterval = timerInterval;
+        this.breakInterval = breakInterval;
+        this.repetitions = repetitions;
+    }
+
     public void start() throws InterruptedException {
-        runInterval(timerInterval, "Work");
-        runInterval(breakInterval, "Break");
+        for (int i = 0; i < this.repetitions; ++i) {
+            runInterval(timerInterval, "Work");
+            runInterval(breakInterval, "Break");
+        }
     }
 
     public void runInterval(int interval, String taskName) throws InterruptedException {
         long elapsed = 0;
         final long totalMilliseconds = interval * MS_TO_MIN;
 
+        System.out.println(taskName + " started on " + new Date());
         while (elapsed < totalMilliseconds) {
             synchronized (threadLock) {
                 while (isPaused) {
@@ -30,7 +41,7 @@ public class PomodoroTimer {
                     threadLock.wait();
                 }
             }
-            //Check for pause once a second
+            //We check for a pause one a second
             Thread.sleep(1000L);
             elapsed += 1000L;
         }
